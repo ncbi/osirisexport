@@ -1,4 +1,4 @@
-osirisexport
+OsirisExport
 ============
 
 Repository for XSLT files to perform data exports using the OSIRIS application

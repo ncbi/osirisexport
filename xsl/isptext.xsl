@@ -84,10 +84,6 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template name="SkipSample">
-    <xsl:param name="sample"/>
-    <xsl:value-of select="0"/>
-  </xsl:template>
 
   <xsl:template name="DumpSampleText">
     <xsl:param name="sample"/>
@@ -116,7 +112,7 @@
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="ud2">
-     <xsl:choose>
+      <xsl:choose>
         <xsl:when test="$ud1 != 'REEXTRACT'">
           <xsl:value-of select="$ud2tmp"/>
         </xsl:when>
@@ -134,55 +130,45 @@
     <xsl:variable name="sampleName" select="$sample/@name"/>
     <xsl:variable name="sampleFile" select="$sample/@file"/>
     <xsl:variable name="verification" select="os:IsVerificationSample($sample)"/>
-    <xsl:variable name="bSkipSample">
-      <xsl:call-template name="SkipSample">
-        <xsl:with-param name="sample" select="$sample"/>
-      </xsl:call-template>
-    </xsl:variable>
+    <xsl:for-each select="$sample/locus">
+      <xsl:if test="not($verification) or os:IsPristine(.)">
 
-    <xsl:if test="$bSkipSample = 0">
-      <xsl:for-each select="$sample/locus">
-        <xsl:if test="not($verification) or os:IsPristine(.)">
+        <!-- for the verificcation sample, only pristine loci are written -->
 
-          <!-- for the verificcation sample, only pristine loci are written -->
-
-          <xsl:value-of select="$sampleName"/>
-          <xsl:value-of select="$TAB"/>
-          <xsl:value-of select="@name"/>
-          
-          <xsl:choose>
-            <xsl:when test="$ud1 = 'REEXTRACT' or $ud1 = 'REAMP'">
-              <xsl:call-template name="repeat">
-                <xsl:with-param name="str" select="$TAB"/>
-                <xsl:with-param name="count" select="4"/>
-              </xsl:call-template>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:for-each select="allele[position() &lt; 5]">
-                <xsl:value-of select="$TAB"/>
-                <xsl:value-of select="@name"/>
-              </xsl:for-each>
-              <xsl:call-template name="repeat">
-                <xsl:with-param name="str" select="$TAB"/>
-                <xsl:with-param name="count" select="4 - count(allele)"/>
-              </xsl:call-template>
-            </xsl:otherwise>
-          </xsl:choose>
-          <xsl:value-of select="$TAB"/>
-          <xsl:value-of select="$ud1"/>
-          <xsl:value-of select="$TAB"/>
-          <xsl:value-of select="$ud2"/>
-          <xsl:value-of select="$TAB"/>
-          <xsl:value-of select="$ud3"/>
-          <xsl:value-of select="$TAB"/>
-          <xsl:value-of select="$TAB"/>
-          <xsl:value-of select="$sampleFile"/>
-          <xsl:text>.fsa</xsl:text>
-          <xsl:value-of select="$EOL"/>
-        </xsl:if>
-      </xsl:for-each>
-      
-    </xsl:if>
+        <xsl:value-of select="$sampleName"/>
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="@name"/>
+        <xsl:choose>
+          <xsl:when test="$ud1 = 'REEXTRACT' or $ud1 = 'REAMP'">
+            <xsl:call-template name="repeat">
+              <xsl:with-param name="str" select="$TAB"/>
+              <xsl:with-param name="count" select="4"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:for-each select="allele[position() &lt; 5]">
+              <xsl:value-of select="$TAB"/>
+              <xsl:value-of select="@name"/>
+            </xsl:for-each>
+            <xsl:call-template name="repeat">
+              <xsl:with-param name="str" select="$TAB"/>
+              <xsl:with-param name="count" select="4 - count(allele)"/>
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="$ud1"/>
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="$ud2"/>
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="$ud3"/>
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="$sampleFile"/>
+        <xsl:text>.fsa</xsl:text>
+        <xsl:value-of select="$EOL"/>
+      </xsl:if>
+    </xsl:for-each>
     
   </xsl:template>
 
@@ -203,14 +189,9 @@
 
   <xsl:template name="runLims">
     <xsl:param name="xml"/>
-    <xsl:param name="exports"/>
-    <xsl:param name="messages"/>
-
     <xsl:variable name="tmpXmlOut">
       <xsl:call-template name="isprun">
         <xsl:with-param name="xml" select="$xml"/>
-        <xsl:with-param name="exports" select="$exports"/>
-        <xsl:with-param name="messages" select="$messages"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="xmlOut" select="exsl:node-set($tmpXmlOut)"/>
@@ -218,6 +199,7 @@
     <xsl:call-template name="xml2lims">
       <xsl:with-param name="xml" select="$xmlOut"/>
     </xsl:call-template>
+
     <xsl:if test="string-length($outputFile)">
       <xsl:variable name="testFile">
         <xsl:value-of select="os:Path($outputFile)"/>
@@ -233,13 +215,8 @@
 
   <xsl:template name="runLimsBase">
     <xsl:param name="xml"/>
-
     <xsl:call-template name="runLims">
       <xsl:with-param name="xml" select="$xml"/>
-      <xsl:with-param name="exports"
-        select="os:GetExports($xml)"/>
-      <xsl:with-param name="messages"
-        select="os:GetExportMessages($xml)"/>
     </xsl:call-template>
 
   </xsl:template>
@@ -260,3 +237,4 @@
   </xsl:template>
 
 </xsl:stylesheet>
+

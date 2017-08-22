@@ -48,6 +48,13 @@
   <xsl:import href="SampleName.xsl"/>
   <xsl:output method="xml" encoding="UTF-8"
     indent="yes" standalone="yes" version="1.0"/>
+    
+  <xsl:key name="keyExport" 
+    match="/OsirisAnalysisReport/ExportSpecifications/MsgExport"
+    use="MsgName"/>
+  <xsl:key name="keyMessage"
+    match="/OsirisAnalysisReport/Messages/Message[(not(Hidden) or (string(Hidden) != 'true')) and string(MsgName)]"
+    use="MessageNumber"/>
 
   <xsl:variable name="varSample" select="'$(Sample)'"/>
   <xsl:variable name="varAlleles" select="'$(Alleles)'"/>
@@ -87,46 +94,27 @@
   <xsl:variable name="LocusRange" select="exsl:node-set($tmpLocusRange)"/>
   <xsl:variable name="LocusDefault" select="$LocusRange/locusRange/locus[@name = '_default']"/>
 
-  <func:function name="os:GetExportMessages">
-    <xsl:param name="top"/>
-    <xsl:variable name="rtn"
-      select="$top/OsirisAnalysisReport/Messages/Message[(not(Hidden) or (string(Hidden) != 'true')) and string(MsgName)]"/>
-    <func:result select="$rtn"/>
-  </func:function>
-
-  <func:function name="os:GetExports">
-    <xsl:param name="top"/>
-    <xsl:variable name="rtn"
-      select="$top/OsirisAnalysisReport/ExportSpecifications/MsgExport"/>
-    <func:result select="$rtn"/>
-  </func:function>
-
   <func:function name="os:FindMessage">
-    <xsl:param name="messages"/>
     <xsl:param name="n"/>
     <xsl:variable name="rtn" 
-      select="$messages[MessageNumber = $n]"/>
+      select="key('keyMessage',$n)"/>
     <func:result select="$rtn"/>
   </func:function>
 
   <func:function name="os:FindExportByName">
-    <xsl:param name="exports"/>
     <xsl:param name="name"/>
     <xsl:variable name="rtn"
-      select="$exports[MsgName = $name]"/>
+      select="key('keyExport',$name)"/>
     <func:result select="$rtn"/>
   </func:function>
 
   <func:function name="os:FindExport">
-    <xsl:param name="messages"/>
-    <xsl:param name="exports"/>
     <xsl:param name="msgNumber"/>
-
-    <xsl:variable name="msg" select="os:FindMessage($messages,$msgNumber)"/>
+  <xsl:variable name="msg" select="os:FindMessage($msgNumber)"/>
     <xsl:choose>
       <xsl:when test="$msg">
         <xsl:variable name="rtn" 
-          select="os:FindExportByName($exports,$msg/MsgName)"/>
+          select="os:FindExportByName($msg/MsgName)"/>
         <func:result select="$rtn"/>
       </xsl:when>
       <xsl:otherwise>
@@ -271,8 +259,6 @@
 
   <xsl:template name="getUD123">
     <xsl:param name="nodeset"/>
-    <xsl:param name="exports"/>
-    <xsl:param name="messages"/>
     <xsl:param name="ILSchannelNr" select="0"/>
     <xsl:param name="checkChannel" select="0"/>
     <xsl:param name="defaultChannel" select="0"/>
@@ -281,9 +267,8 @@
     <xsl:param name="alleles"/>
 
     <xsl:for-each select="$nodeset">
-      
       <xsl:variable name="export"
-        select="os:FindExport($messages,$exports,.)"/>
+        select="os:FindExport(.)"/>  STOP HER
       <xsl:if test="$export">
         <xsl:variable name="channelNr">
           <xsl:choose>
@@ -337,24 +322,20 @@
   <xsl:template name="sampleUD">
     <xsl:param name="sample"/>
     <xsl:param name="sampleName"/>
-    <xsl:param name="exports"/>
-    <xsl:param name="messages"/>
     <xsl:param name="ILSchannelNr"/>
 
     <udset>
+
       <xsl:call-template name="getUD123">
         <xsl:with-param name="nodeset" select="$sample/*/MessageNumber"/>
-        <xsl:with-param name="exports" select="$exports"/>
-        <xsl:with-param name="messages" select="$messages"/>
         <xsl:with-param name="ILSchannelNr" select="$ILSchannelNr"/>
         <xsl:with-param name="sampleName" select="$sampleName"/>
       </xsl:call-template>
 
+
       <xsl:call-template name="getUD123">
         <xsl:with-param name="nodeset"
           select="$sample/ChannelAlerts/Channel/MessageNumber"/>
-        <xsl:with-param name="exports" select="$exports"/>
-        <xsl:with-param name="messages" select="$messages"/>
         <xsl:with-param name="checkChannel" select="1"/>
         <xsl:with-param name="sampleName" select="$sampleName"/>
       </xsl:call-template>
@@ -362,8 +343,6 @@
       <xsl:call-template name="getUD123">
         <xsl:with-param name="nodeset"
           select="$sample/ChannelAlerts/Channel/Artifact[not(Disabled) or (Disabled != 'true')]/MessageNumber"/>
-        <xsl:with-param name="exports" select="$exports"/>
-        <xsl:with-param name="messages" select="$messages"/>
         <xsl:with-param name="checkChannel" select="2"/>
         <xsl:with-param name="sampleName" select="$sampleName"/>
       </xsl:call-template>
@@ -371,8 +350,6 @@
       <xsl:call-template name="getUD123">
         <xsl:with-param name="nodeset"
           select="$sample/InterlocusAlerts/Alert/MessageNumber"/>
-        <xsl:with-param name="exports" select="$exports"/>
-        <xsl:with-param name="messages" select="$messages"/>
         <xsl:with-param name="sampleName" select="$sampleName"/>
       </xsl:call-template>
 
@@ -456,22 +433,16 @@
 
   <xsl:template name="directoryUD">
     <xsl:param name="xml"/>
-    <xsl:param name="exports"/>
-    <xsl:param name="messages"/>
     <udset>
       <xsl:call-template name="getUD123">
         <xsl:with-param name="nodeset"
           select="$xml/OsirisAnalysisReport/DirectoryAlerts/MessageNumber"/>
-        <xsl:with-param name="exports" select="$exports"/>
-        <xsl:with-param name="messages" select="$messages"/>
       </xsl:call-template>
     </udset>
   </xsl:template>
 
   <xsl:template name="RunSample">
     <xsl:param name="xml"/>
-    <xsl:param name="exports"/>
-    <xsl:param name="messages"/>
     <xsl:param name="sample"/>
     <xsl:param name="ILSchannelNr"/>
     <xsl:param name="loci"/>
@@ -492,8 +463,6 @@
         <xsl:call-template name="sampleUD">
           <xsl:with-param name="sample" select="$sample"/>
           <xsl:with-param name="sampleName" select="$sampleName"/>
-          <xsl:with-param name="exports" select="$exports"/>
-          <xsl:with-param name="messages" select="$messages"/>
           <xsl:with-param name="ILSchannelNr" select="$ILSchannelNr"/>
         </xsl:call-template>
       </xsl:variable>
@@ -546,10 +515,6 @@
                   <xsl:call-template name="getUD123">
                     <xsl:with-param name="nodeset"
                       select="$locusMessages"/>
-                    <xsl:with-param name="exports"
-                      select="$exports"/>
-                    <xsl:with-param name="messages"
-                      select="$messages"/>
                     <xsl:with-param name="locusName"
                       select="$locusName"/>
                     <xsl:with-param name="alleles"
@@ -574,8 +539,6 @@
                       <xsl:call-template name="getUD123">
                         <xsl:with-param name="nodeset"
                           select="./MessageNumber"/>
-                        <xsl:with-param name="exports" 
-                          select="$exports"/>
                         <xsl:with-param name="locusName"
                           select="$locusName"/>
                         <xsl:with-param name="alleles"
@@ -598,8 +561,6 @@
 
   <xsl:template name="isprun">
     <xsl:param name="xml"/>
-    <xsl:param name="exports"/>
-    <xsl:param name="messages"/>
     <xsl:param name="SkipList" select="false()"/>
     <xsl:param name="VerificationList" select="false()"/>
     <xsl:param name="userMessages" select="''"/>
@@ -614,25 +575,12 @@
     <xsl:variable name="tmpUD123dir">
       <xsl:call-template name="directoryUD">
         <xsl:with-param name="xml" select="$xml"/>
-        <xsl:with-param name="exports" select="$exports"/>
-        <xsl:with-param name="messages" select="$messages"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="UD123dir" select="exsl:node-set($tmpUD123dir)"/>
     <xsl:variable name="countUD123dir" select="count($UD123dir/udset/*)"/>
-    <xsl:variable name="noexport" select="$exports//Protocol[DoNotExport = 'true' and string-length(Notification) != 0]"/>
-    <xsl:if test="$noexport">
-      <xsl:message>
-        <xsl:for-each select="$noexport">
-          <xsl:if test="position() != 0">&#10;</xsl:if>
-          <xsl:value-of select="Level"/>
-          <xsl:text> level message: </xsl:text>
-          <xsl:value-of select="Notification"/>
-        </xsl:for-each>
-      </xsl:message>
-    </xsl:if>
     <directory>
-
+    
       <xsl:if test="$countUD123dir">
         <xsl:copy-of select="$UD123dir"/>
       </xsl:if>
@@ -663,8 +611,6 @@
             select="os:InList($VerificationList,os:GetUniqueSampleName(.))"/>
           <xsl:call-template name="RunSample">
             <xsl:with-param name="xml" select="$xml"/>
-            <xsl:with-param name="exports" select="$exports"/>
-            <xsl:with-param name="messages" select="$messages"/>
             <xsl:with-param name="sample" select="."/>
             <xsl:with-param name="ILSchannelNr" select="$ILSchannelNr"/>
             <xsl:with-param name="loci" select="$loci"/>
@@ -681,10 +627,6 @@
     <xsl:param name="userMessages" select="''"/>
     <xsl:call-template name="isprun">
       <xsl:with-param name="xml" select="$xml"/>
-      <xsl:with-param name="exports"
-        select="os:GetExports($xml)"/>
-      <xsl:with-param name="messages"
-        select="os:GetExportMessages($xml)"/>
       <xsl:with-param name="userMessages" select="$userMessages"/>
     </xsl:call-template>
   </xsl:template>

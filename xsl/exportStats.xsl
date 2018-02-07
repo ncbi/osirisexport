@@ -263,10 +263,11 @@
           <xsl:value-of select="$sampleName"/>
           <xsl:value-of select="$DELIM"/>
           <xsl:value-of select="LocusName"/>
+          <xsl:variable name="locusName" select="LocusName"/>
           <xsl:for-each select="Allele[not(Disabled = 'true')]">
             <xsl:call-template name="writeAllele">
               <xsl:with-param name="allele" select="."/>
-              <xsl:with-param name="locus" select="LocusName"/>
+              <xsl:with-param name="locus" select="$locusName"/>
             </xsl:call-template>
           </xsl:for-each>
           <xsl:value-of select="$EOL"/>

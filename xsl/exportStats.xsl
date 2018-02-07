@@ -205,6 +205,7 @@
 
   <xsl:template name="writeAllele">
     <xsl:param name="allele"/>
+    <xsl:param name="locus"/>
     <!-- 
          column order, needs to be consistent with template headerRows
           Call
@@ -216,7 +217,7 @@
      -->
     <xsl:variable name="nBPS" select="round($allele/BPS)"/>
     <xsl:value-of select="$DELIM"/>
-    <xsl:value-of select="$allele/Name"/>
+    <xsl:value-of select="os:DisplayAllele($allele/Name,$locus)"/>
     <xsl:value-of select="$DELIM"/>
     <xsl:value-of select="$allele/RFU"/>
     <xsl:value-of select="$DELIM"/>
@@ -265,6 +266,7 @@
           <xsl:for-each select="Allele[not(Disabled = 'true')]">
             <xsl:call-template name="writeAllele">
               <xsl:with-param name="allele" select="."/>
+              <xsl:with-param name="locus" select="LocusName"/>
             </xsl:call-template>
           </xsl:for-each>
           <xsl:value-of select="$EOL"/>

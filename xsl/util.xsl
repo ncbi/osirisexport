@@ -63,6 +63,36 @@
     <func:result select="boolean(number($rtn))"/>
   </func:function>
 
+  <func:function name="os:IsAmel">
+    <xsl:param name="LocusName"/>
+    <xsl:variable name="LocusLC"
+      select="translate(string($LocusName),$UPPER,$lower)"/>
+    <xsl:variable name="rtn" select="contains($LocusLC,'amel')"/>
+    <func:result select="$rtn"/>
+  </func:function>
+
+  <func:function name="os:DisplayAllele">
+    <xsl:param name="AlleleName"/>
+    <xsl:param name="LocusName"/>
+    <xsl:variable name="rtn">
+      <xsl:choose>
+        <xsl:when test="not(os:IsAmel($LocusName))">
+          <xsl:value-of select="$AlleleName"/>
+        </xsl:when>
+        <xsl:when test="$AlleleName = '1'">
+          <xsl:text>X</xsl:text>
+        </xsl:when>
+        <xsl:when test="$AlleleName = '2'">
+          <xsl:text>Y</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$AlleleName"/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <func:result select="$rtn"/>
+  </func:function>
+
   <func:function name="os:isNaN">
     <xsl:param name="n"/>
     <xsl:choose>
@@ -544,6 +574,15 @@
     <xsl:value-of select="concat($file1,' - ',$path1,'&#10;')"/>
     <xsl:value-of select="concat($file2,' - ',$path2,'&#10;')"/>
     <xsl:value-of select="concat($file3,' - ',$path3,'&#10;')"/>
+    <xsl:text>Amel 1: </xsl:text>
+    <xsl:value-of select="os:DisplayAllele(1,'amelogenin')"/>
+    <xsl:text>&#10;Amel 2: </xsl:text>
+    <xsl:value-of select="os:DisplayAllele(2,'amelogenin')"/>
+    <xsl:text>&#10;Amel 3: </xsl:text>
+    <xsl:value-of select="os:DisplayAllele(3,'amelogenin')"/>
+    <xsl:text>&#10;D6 1: </xsl:text>
+    <xsl:value-of select="os:DisplayAllele(1,'D6S1234')"/>
+    <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
 

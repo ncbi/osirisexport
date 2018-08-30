@@ -22,7 +22,7 @@
     <xsl:value-of select="$DELIM"/>
     <xsl:text>Locus Area Ratio</xsl:text>
     <xsl:value-of select="$DELIM"/>
-    <xsl:text> YSTR Area Ratio</xsl:text>
+    <xsl:text>YSTR Area Ratio</xsl:text>
     <xsl:value-of select="$DELIM"/>
     <xsl:text>Start Temp</xsl:text>
     <xsl:value-of select="$DELIM"/>
@@ -34,7 +34,7 @@
     <xsl:value-of select="$DELIM"/>
     <xsl:text>Start Curr</xsl:text>
     <xsl:value-of select="$DELIM"/>
-    <xsl:text> Curr Diff</xsl:text>
+    <xsl:text>Curr Diff</xsl:text>
     <xsl:value-of select="$DELIM"/>
     <xsl:text>start Power</xsl:text>
     <xsl:value-of select="$DELIM"/>
@@ -43,17 +43,17 @@
       <xsl:value-of select="$DELIM"/>
       <xsl:text>Ch</xsl:text>
       <xsl:value-of select="Number"/>
-      <xsl:text> Noise</xsl:text>
+      <xsl:text>Noise</xsl:text>
 
       <xsl:value-of select="$DELIM"/>
       <xsl:text>Ch</xsl:text>
       <xsl:value-of select="Number"/>
-      <xsl:text> Locus Area Ratio</xsl:text>
+      <xsl:text>Locus Area Ratio</xsl:text>
 
       <xsl:value-of select="$DELIM"/>
       <xsl:text>Ch</xsl:text>
       <xsl:value-of select="Number"/>
-      <xsl:text> YSTR Area Ratio</xsl:text>
+      <xsl:text>YSTR Area Ratio</xsl:text>
 
     </xsl:for-each>
     <xsl:value-of select="$EOL"/>

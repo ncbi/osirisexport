@@ -65,18 +65,22 @@
 
   <func:function name="os:IsAmel">
     <xsl:param name="LocusName"/>
-    <xsl:variable name="LocusLC"
-      select="translate(string($LocusName),$UPPER,$lower)"/>
-    <xsl:variable name="rtn" select="contains($LocusLC,'amel')"/>
+    <xsl:variable name="LocusLC">
+      <xsl:value-of
+        select="translate(string($LocusName),$UPPER,$lower)"/>
+      <xsl:text>....</xsl:text>
+    </xsl:variable>
+    <xsl:variable name="rtn"
+      select="substring($LocusLC,1,4) = 'amel'"/>
     <func:result select="$rtn"/>
   </func:function>
 
-  <func:function name="os:DisplayAllele">
+  <func:function name="os:DisplayAllele2">
     <xsl:param name="AlleleName"/>
-    <xsl:param name="LocusName"/>
+    <xsl:param name="isAmel"/>
     <xsl:variable name="rtn">
       <xsl:choose>
-        <xsl:when test="not(os:IsAmel($LocusName))">
+        <xsl:when test="not($isAmel)">
           <xsl:value-of select="$AlleleName"/>
         </xsl:when>
         <xsl:when test="$AlleleName = '1'">
@@ -92,6 +96,15 @@
     </xsl:variable>
     <func:result select="$rtn"/>
   </func:function>
+
+
+  <func:function name="os:DisplayAllele">
+    <xsl:param name="AlleleName"/>
+    <xsl:param name="LocusName"/>
+    <func:result 
+      select="os:DisplayAllele2($AlleleName, os:IsAmel($LocusName))"/>
+  </func:function>
+
 
   <func:function name="os:isNaN">
     <xsl:param name="n"/>
@@ -577,7 +590,7 @@
     <xsl:text>Amel 1: </xsl:text>
     <xsl:value-of select="os:DisplayAllele(1,'amelogenin')"/>
     <xsl:text>&#10;Amel 2: </xsl:text>
-    <xsl:value-of select="os:DisplayAllele(2,'amelogenin')"/>
+    <xsl:value-of select="os:DisplayAllele(2,'AMELOGENIN')"/>
     <xsl:text>&#10;Amel 3: </xsl:text>
     <xsl:value-of select="os:DisplayAllele(3,'amelogenin')"/>
     <xsl:text>&#10;D6 1: </xsl:text>

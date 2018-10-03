@@ -1,5 +1,5 @@
-    <?xml version="1.0" encoding="utf-8"?>
-    <!--
+<?xml version="1.0" encoding="utf-8"?>
+<!--
 #
 # ===========================================================================
 #
@@ -55,6 +55,7 @@
   extension-element-prefixes="func exsl os"
   version="1.0">
 
+  <xsl:import href="util.xsl"/>
   <xsl:output method="text"/>
 
   <xsl:variable name="TAB" select="'&#9;'"/>
@@ -88,7 +89,7 @@
     <xsl:param name="end" select="$repeats"/>
     <xsl:choose>
       <xsl:when test="$end &gt; $begin">
-        <xsl:variable name="mid" select="floor( ($begin + $end)/2 )"/>
+        <xsl:variable name="mid" select="floor( ($begin + $end) * 0.5 )"/>
         <xsl:call-template name="HeaderLoop">
           <xsl:with-param name="label" select="$label"/>
           <xsl:with-param name="begin" select="$begin"/>
@@ -114,34 +115,38 @@
     <xsl:text>Sample File</xsl:text>
     <xsl:value-of select="$TAB"/>
     <xsl:text>Marker</xsl:text>
-    <xsl:call-template name="Headerloop">
-      <xsl:with-param name="label" select="'Allele'/>
+    <xsl:call-template name="HeaderLoop">
+      <xsl:with-param name="label" select="'Allele'"/>
     </xsl:call-template>
-    <xsl:call-template name="Headerloop">
-      <xsl:with-param name="label" select="'Size'/>
+    <xsl:call-template name="HeaderLoop">
+      <xsl:with-param name="label" select="'Size'"/>
     </xsl:call-template>
-    <xsl:call-template name="Headerloop">
-      <xsl:with-param name="label" select="'Height'/>
+    <xsl:call-template name="HeaderLoop">
+      <xsl:with-param name="label" select="'Height'"/>
     </xsl:call-template>
     <xsl:value-of select="$EOL"/>
   </xsl:template>
 
 
   <xsl:template name="Repeat">
-    <xsl:param name="str" select="$TAB"/>
+    <xsl:param name="node" select="$TAB"/>
     <xsl:param name="count" select="0"/>
     <xsl:choose>
       <xsl:when test="$count = 1">
-        <xsl:copy-of select="$str"/>
-      <xsl:when/>
-      <xsl:when test="$count &gt; 1">
-        <xsl:variable name="half" select="floor($count / 2)"/>
+        <xsl:copy-of select="$node"/>
+      </xsl:when>
+      <xsl:when test="$count = 2">
+        <xsl:copy-of select="$node"/>
+        <xsl:copy-of select="$node"/>
+      </xsl:when>
+      <xsl:when test="$count &gt; 2">
+        <xsl:variable name="half" select="floor($count * 0.5)"/>
         <xsl:call-template name="Repeat">
-          <xsl:with-param name="str" select="$str"/>
+          <xsl:with-param name="node" select="$node"/>
           <xsl:with-param name="count" select="$half"/>
         </xsl:call-template>
         <xsl:call-template name="Repeat">
-          <xsl:with-param name="str" select="$str"/>
+          <xsl:with-param name="node" select="$node"/>
           <xsl:with-param name="count" select="$count - $half"/>
         </xsl:call-template>
       </xsl:when>
@@ -199,99 +204,15 @@
     <xsl:variable name="x" select="boolean($sample/Locus/Allele[os:isAlleleEnabled(.)])"/>
     <func:result select="$x"/>
   </func:function>
-
-
-
-  <xsl:template name="GetBool">
-    <xsl:param name="s"/>
-    <xsl:choose>
-      <xsl:when test="$s = ''">
-        <xsl:value-of select="0"/>
-      </xsl:when>
-      <xsl:when test="contains('FfNn0',substring($s,1,1))">
-        <!-- check for false or no -->
-        <xsl:value-of select="0"/>
-      </xsl:when>
-      <xsl:when test="contains('YyTt123456789',substring($s,1,1))">
-        <!-- check for true or yes -->
-        <xsl:value-of select="1"/>
-      </xsl:when>
-      <xsl:when test="boolean($s) = 'true'">
-        <xsl:value-of select="1"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="0"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
   
-  <xsl:template name="sum">
-    <xsl:param name="nodes"/>
-    <xsl:param name="top" select="1"/>
-    <xsl:param name="bottom" select="count($nodes)"/>
-    
-    <xsl:choose>
-      <xsl:when test="$top &lt; $bottom">
-        <xsl:variable name="mid" select="floor(($top + $bottom) * 0.5)"/>
-        <xsl:variable name="s1">
-          <xsl:call-template name="sum">
-            <xsl:with-param name="nodes" select="$nodes"/>
-            <xsl:with-param name="top" select="$top"/>
-            <xsl:with-param name="bottom" select="$mid"/>
-          </xsl:call-template>
-        </xsl:variable>
-        <xsl:variable name="s2">
-          <xsl:call-template name="sum">
-            <xsl:with-param name="nodes" select="$nodes"/>
-            <xsl:with-param name="top" select="$mid + 1"/>
-            <xsl:with-param name="bottom" select="$bottom"/>
-          </xsl:call-template>
-        </xsl:variable>
-        <xsl:value-of select="int($s1) + int($s2)"/>
-      </xsl:when>
-      <xsl:when test="$top = $bottom">
-        <xsl:value-of select="$nodes[$top]/Count"/>
-      </xsl:when>
-    </xsl:choose>
-  </xsl:template>
-  
-  <func:function name="os:sum">
-    <xsl:param name="nodes"/>
-    <xsl:variable name="nSum">
-      <xsl:call-template name="sum">
-        <xsl:with-param name="nodes" select="$nodes"/>
-      </xsl:call-template>
-    </xsl:variable>
-    <func:result select="int($nSum)"/>
+  <func:function name="os:hasLocusAlleles">
+    <xsl:param name="locus"/>
+    <xsl:variable name="x" select="boolean($locus/Allele[os:isAlleleEnabled(.)])"/>
+    <func:result select="$x"/>
   </func:function>
-  
-  <func:function name="AlleleCount">
-    <xsl:with-param name="Locus"/>
-    <xsl:variable name="r" "/>
-    <func:result select="$r"/>
-  </xsl:template>
-
-  
-  <xsl:template name="writeAlleleItem">
-    <xsl:param name="str"/>
-    <xsl:param name="count"/>
-    <xsl:variable name="tabStr" select="concat($TAB,$str)"/>
-    <xsl:choose>
-      <xsl:when test="$count">
-        <xsl:call-template select="Repeat">
-          <xsl:with-param name="str" select="$tabStr"/>
-          <xsl:with-param name="count" select="$count"/>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="$tabStr"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
+    
   <xsl:template name="writeSample">
     <xsl:param name="sample"/>
-    <xsl:variable name="SampleFile" select="$sample/Name"/>
     <xsl:variable name="LineStart">
       <xsl:value-of select="$sample/Name"/>
       <xsl:value-of select="$fileExt"/>
@@ -300,49 +221,61 @@
 
     <!-- loop through sample loci -->
 
-    <xsl:for-each select="$sample/Locus[Allele]">
+    <xsl:for-each select="$sample/Locus[os:hasLocusAlleles(.)]">
       <xsl:variable name="tmpAlleleExpand">
-        <xsl:for-each select="Allele">
-          <xsl:variable name="count">
-          </xsl:variable>
-        </xsl:for-each>
-      </xsl:variable>
-      <xsl:variable name="alleleCount" select="count(Allele[not(Count)]) + os:sum(Allele/Count)"/>
-      <xsl:value-of select="$LineStart"/>
-      <xsl:value-of select="LocusName"/>
-      <xsl:variable name="emptyColumns">
-        <xsl:call-template name="Repeat">
-          <xsl:with-param name="count" select="$repeats - $alleleCount"/>
-        </xsl:call>
-      </xsl:variable>
-
-      <xsl:variable name="sAlleles">
-        <xsl:for-each select="Allele">
-          <xsl:variable name="AlleleContent" select="concat($TAB,Name)"/>
-          <xsl:variable>
-          
-        </xsl:for-each>
-      </xsl:variable>
-        <xsl:variable name="AlleleName">
+        <!--  repeat each Allele element by its Count element value  -->
+        <xsl:for-each select="Allele[os:isAlleleEnabled(.)]">
           <xsl:choose>
-            <xsl:when test="OffLadder = 'true'">
-              <xsl:text>OL</xsl:text>
-            </xsl:when>
-            <xsl:when test="$LocusName != 'AMEL'">
-              <xsl:value-of select="Name"/>
-            </xsl:when>
-            <xsl:when test="Name = '1'">
-              <xsl:text>X</xsl:text>
-            </xsl:when>
-            <xsl:when test="Name = '2'">
-              <xsl:text>Y</xsl:text>
+            <xsl:when test="Count">
+              <xsl:call-template name="Repeat">
+                <xsl:with-param name="node" select="."/>
+                <xsl:with-param name="count" select="Count"/>
+              </xsl:call-template>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:value-of select="Name"/>
+              <xsl:copy-of select="."/>
             </xsl:otherwise>
           </xsl:choose>
-        </xsl:variable>
-        <xsl:value-of select="concat($TAB,$AlleleName,$TAB,meanbps,$TAB,RFU)"/>
+        </xsl:for-each>
+      </xsl:variable>
+      <xsl:variable name="AlleleNodeSet" select="exsl:node-set($tmpAlleleExpand)"/>
+      <xsl:variable name="AlleleExpand" select="$AlleleNodeSet/Allele[position() &lt;= $repeats]"/>
+      <xsl:variable name="AlleleCount" select="count($AlleleNodeSet/Allele)"/>
+      <xsl:if test="$AlleleCount &gt; $repeats">
+        <xsl:message>
+          <xsl:value-of select="$sample/Name"/>
+          <xsl:value-of select="$fileExt"/>
+          <xsl:text>, locus </xsl:text>
+          <xsl:value-of select="LocusName"/>
+          <xsl:text>, has </xsl:text>
+          <xsl:value-of select="$AlleleCount"/>
+          <xsl:text> alleles.  </xsl:text>
+          <xsl:value-of select="$repeats"/>
+          <xsl:text> will be exported.</xsl:text>
+        </xsl:message>
+      </xsl:if>
+      <xsl:variable name="IsAmel" select="os:IsAmel(LocusName)"/>
+      <xsl:variable name="emptyColumns">
+        <xsl:call-template name="Repeat">
+          <xsl:with-param name="count" select="$repeats - count($AlleleExpand)"/>
+        </xsl:call-template>
+      </xsl:variable>
+
+      <xsl:value-of select="$LineStart"/>
+      <xsl:value-of select="LocusName"/>
+      <xsl:for-each select="$AlleleExpand">
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="os:DisplayAllele2(Name,$IsAmel)"/>
+      </xsl:for-each>
+      <xsl:value-of select="$emptyColumns"/>
+      <xsl:for-each select="$AlleleExpand">
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="floor(BPS + 0.5)"/>
+      </xsl:for-each>
+      <xsl:value-of select="$emptyColumns"/>
+      <xsl:for-each select="$AlleleExpand">
+        <xsl:value-of select="$TAB"/>
+        <xsl:value-of select="RFU"/>
       </xsl:for-each>
       <xsl:value-of select="$EOL"/>
     </xsl:for-each>
@@ -353,7 +286,7 @@
     <xsl:variable name="samples" select="/OsirisAnalysisReport/Table/Sample[os:isEnabled(.) and os:hasAlleles(.)]"/>
     <xsl:choose>
       <xsl:when test="$samples">
-        <xsl:call-template select="Header"/>
+        <xsl:call-template name="Header"/>
         <xsl:for-each select="$samples">
           <xsl:call-template name="writeSample">
             <xsl:with-param name="sample" select="."/>

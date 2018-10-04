@@ -58,6 +58,8 @@
   <xsl:import href="util.xsl"/>
   <xsl:output method="text"/>
 
+  <xsl:param name="ILSBPS" select="1"/>
+  <xsl:param name="DECBPS" select="1"/>
   <xsl:variable name="TAB" select="'&#9;'"/>
   <xsl:variable name="EOL" select="'&#10;'"/>
   <xsl:variable name="repeats" select="25"/>
@@ -79,7 +81,22 @@
       <file-extension>txt</file-extension>
       <extension-override>true</extension-override>
       <default-location>*A</default-location>
-      <xsl-params/>
+      <xsl-params>
+        <param>
+          <name>ILSBPS</name>
+          <description>Use ILS Ref. BPS</description>
+          <type>checkbox</type>
+          <checked-value>1</checked-value>
+          <unchecked-value>0</unchecked-value>
+        </param>
+        <param>
+          <name>DECBPS</name>
+          <description>Round BPS to nearest integer</description>
+          <type>checkbox</type>
+          <checked-value>0</checked-value>
+          <unchecked-value>1</unchecked-value>
+        </param>
+      </xsl-params>
     </export>
   </xsl:template>
   
@@ -269,8 +286,29 @@
       </xsl:for-each>
       <xsl:value-of select="$emptyColumns"/>
       <xsl:for-each select="$AlleleExpand">
+        <xsl:variable name="bps0">
+          <xsl:choose>
+            <xsl:when test="$ILSBPS">
+              <xsl:value-of select="meanbps"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="BPS"/>
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
+        <xsl:variable name="bps">
+          <xsl:choose>
+            <xsl:when test="not(string-length($bps0))"/>
+            <xsl:when test="$DECBPS">
+              <xsl:value-of select="$bps0"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="floor($bps0 + 0.5)"/>
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
         <xsl:value-of select="$TAB"/>
-        <xsl:value-of select="floor(BPS + 0.5)"/>
+        <xsl:value-of select="$bps"/>
       </xsl:for-each>
       <xsl:value-of select="$emptyColumns"/>
       <xsl:for-each select="$AlleleExpand">

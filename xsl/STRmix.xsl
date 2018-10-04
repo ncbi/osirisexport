@@ -300,7 +300,7 @@
           <xsl:choose>
             <xsl:when test="not(string-length($bps0))"/>
             <xsl:when test="$DECBPS">
-              <xsl:value-of select="$bps0"/>
+              <xsl:value-of select="format-number($bps0,'#.00')"/>
             </xsl:when>
             <xsl:otherwise>
               <xsl:value-of select="floor($bps0 + 0.5)"/>

@@ -242,17 +242,7 @@
       <xsl:variable name="tmpAlleleExpand">
         <!--  repeat each Allele element by its Count element value  -->
         <xsl:for-each select="Allele[os:isAlleleEnabled(.)]">
-          <xsl:choose>
-            <xsl:when test="Count">
-              <xsl:call-template name="Repeat">
-                <xsl:with-param name="node" select="."/>
-                <xsl:with-param name="count" select="Count"/>
-              </xsl:call-template>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:copy-of select="."/>
-            </xsl:otherwise>
-          </xsl:choose>
+          <xsl:copy-of select="."/>
         </xsl:for-each>
       </xsl:variable>
       <xsl:variable name="AlleleNodeSet" select="exsl:node-set($tmpAlleleExpand)"/>
